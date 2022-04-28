@@ -1,0 +1,49 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+repositories {
+      mavenCentral()
+}
+
+
+compileJava.options.encoding = "UTF-8"
+
+dependencies {
+    /* Warning: do not use log4j < 2.16 because if a serious (10 of 10 points) vulnerability! */
+    implementation 'org.slf4j:slf4j-api:2.+';
+    implementation 'org.slf4j:slf4j-simple:2.+'
+
+    // jetty server
+    implementation 'org.eclipse.jetty:jetty-server:11.+'
+    implementation 'org.eclipse.jetty:jetty-servlet:11.+'
+    compileOnly 'jakarta.servlet:jakarta.servlet-api:5.+'
+
+    implementation 'org.eclipse.jetty:jetty-webapp:11.+'
+    implementation 'org.eclipse.jetty:jetty-proxy:11.+'
+    implementation 'org.eclipse.jetty.websocket:websocket-jetty-server:11.+'
+    implementation 'org.eclipse.jetty.websocket:websocket-jetty-client:11.+'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+application {
+    mainClass.set("lv.lumii.qrng.Main")
+//    applicationDefaultJvmArgs = ['-Dkey=value']
+}
+startScripts {
+    applicationName = 'qrng-web-service'
+}
+
+/*installDist {
+    into(distDirName)
+    dependsOn startScripts
+}*/
+
+run {
+    //args 'arg'
+    //jvmArgs 'jvmarg'
+}

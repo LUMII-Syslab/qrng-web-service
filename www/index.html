@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+</head>
+
+<body>
+    <script>
+        var socket = new WebSocket("ws://localhost:4444/ws/");
+        socket.binaryType = "arraybuffer";
+        socket.onopen = function() {
+            console.log("Connected.");
+            socket.send("Alice");
+        }
+        socket.onmessage = function(event) {
+            if (typeof event.data === "string") {
+                console.log("received: " + event.data);
+            }
+        }
+    </script>
+</body>
+
+</html>
