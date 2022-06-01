@@ -60,7 +60,8 @@ public class QuantisProvider extends Provider {
      * Constructs a provider for a Quantis device.
      */
     public QuantisProvider() {
-        super("Quantis", Quantis.GetLibVersion(), "Quantis True Random Number Generator");
+        super("Quantis", Quantis.GetLibVersion()+"", "Quantis True Random Number Generator");
+        // ^^^ by SK 2022-06: converting version to String in order to avoid deprecated API
 
         if (Quantis.Count(Quantis.QuantisDeviceType.QUANTIS_DEVICE_PCI) > 0
                 || Quantis.Count(Quantis.QuantisDeviceType.QUANTIS_DEVICE_USB) > 0) {

@@ -33,14 +33,50 @@ test {
     useJUnitPlatform()
 }
 
-application {
-    mainClass.set("lv.lumii.qrng.Main")
-//    applicationDefaultJvmArgs = ['-Dkey=value']
-}
-startScripts {
-    applicationName = 'qrng-web-service'
+def getOsName(project) {
+    final String osName = System.getProperty("os.name").toLowerCase();
+
+    if (osName.contains("linux")) {
+        return ("Linux");
+    } else if (osName.contains("windows")) {
+        return ("Windows_NT"); // as %OS%
+    }
+    return ("Unsupported OS by the IQD Quantis QRNG device");
 }
 
+def getOsArch(project) {
+   return System.properties['os.arch'];
+    // in x86_64 Windows, this returns amd64, which is ok, since in Windows, %PROCESSOR_ARCHITECTURE%=AMD64 and the case does not matter
+}
+
+def JAVA_LIBRARY_PATH_PLACEHOLDER=projectDir.toPath().resolve("dll").resolve(getOsName()+'-'+getOsArch()).toString().replaceAll("\\\\", "/")
+// ^^^ this placeholder is used as applicationDefaultJvmArgs when invoking: gradle run
+
+application {
+//    mainClass.set("lv.lumii.qrng.Main")
+    mainClass.set("lv.lumii.qrng.QuantisThread")
+    applicationDefaultJvmArgs = ['-Djava.library.path='+JAVA_LIBRARY_PATH_PLACEHOLDER]
+}
+
+
+startScripts {
+    applicationName = 'qrng-web-service'
+    doLast {
+        unixScript.text = unixScript.text.replace(JAVA_LIBRARY_PATH_PLACEHOLDER, '\$APP_HOME/`uname -s`-`uname -m`')
+        windowsScript.text = windowsScript.text.replace(JAVA_LIBRARY_PATH_PLACEHOLDER, '%APP_HOME%\\dll\\%OS%-%PROCESSOR_ARCHITECTURE%')
+    }
+}
+
+installDist {
+    doLast {
+        println "Copying native DLLs/libraries into the distribution"
+        copy {
+          from(projectDir)
+          into(destinationDir)          
+          include("dll/**")
+        }
+    }
+}
 /*installDist {
     into(distDirName)
     dependsOn startScripts
@@ -48,5 +84,12 @@ startScripts {
 
 run {
     //args 'arg'
-    //jvmArgs 'jvmarg'
+    doFirst {
+       jvmArgs '-Djava.library.path='+projectDir.toPath().resolve("dll").resolve(getOsName()+'-'+getOsArch())
+       applicationDefaultJvmArgs = jvmArgs
+       systemProperty('java.library.path',jvmArgs)
+    }   
+    jvmArgs '-Djava.library.path='+projectDir.toPath().resolve("dll").resolve(getOsName()+'-'+getOsArch())
+    systemProperty('java.library.path',jvmArgs)
+    applicationDefaultJvmArgs = jvmArgs
 }

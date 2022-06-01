@@ -60,7 +60,7 @@ public class Quantis {
             System.loadLibrary("Quantis");
         }
         catch (Exception e) {
-            System.out.println("Quantis.dll ERROR");
+            System.err.println("Quantis.dll ERROR");
             e.printStackTrace();
         }
     }

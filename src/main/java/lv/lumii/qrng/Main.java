@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 package lv.lumii.qrng;
 import jakarta.servlet.*;
 import org.eclipse.jetty.websocket.server.*;
@@ -12,6 +13,19 @@ import org.slf4j.LoggerFactory;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 
+/**
+ * Copyright (c) Institute of Mathematics and Computer Science, University of Latvia
+ * License: MIT
+ * Contributors:
+ *   Sergejs Kozlovics
+ *
+ * Implementing the QRNG web service that listens the insecure HTTP_PORT on "localhost".
+ * This QRNG web service is intended to work as a backend for HAProxy
+ * compiled with quantum-resistant algorithms from openquantumsafe.org.
+ *
+ * HAProxy will provide the HTTPS web socket end point identified by
+ * a quantum-safe server certificate identified by our self-signed quantum-safe CA key.
+ */
 public class Main {
 
     private static Logger logger = LoggerFactory.getLogger(Main.class);
@@ -87,6 +101,7 @@ public class Main {
                     }
                     catch (BufferUnderflowException bufferEmpty) {
                         try {
+                            // wait some time in hope that bigBuffer gets replenished
                             Thread.sleep(1000);
                         } catch (InterruptedException e) {
                             // we don't care of interrupts; we will wait again, if needed
