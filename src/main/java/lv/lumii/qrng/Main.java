@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 package lv.lumii.qrng;
+
 import jakarta.servlet.*;
 import org.eclipse.jetty.websocket.server.*;
 
@@ -17,12 +18,12 @@ import java.nio.ByteBuffer;
  * Copyright (c) Institute of Mathematics and Computer Science, University of Latvia
  * License: MIT
  * Contributors:
- *   Sergejs Kozlovics
- *
+ * Sergejs Kozlovics
+ * <p>
  * Implementing the QRNG web service that listens the insecure HTTP_PORT on "localhost".
  * This QRNG web service is intended to work as a backend for HAProxy
  * compiled with quantum-resistant algorithms from openquantumsafe.org.
- *
+ * <p>
  * HAProxy will provide the HTTPS web socket end point identified by
  * a quantum-safe server certificate identified by our self-signed quantum-safe CA key.
  */
@@ -39,7 +40,7 @@ public class Main {
 
     public static void main(String[] args) {
         try {
-            if (args.length>0) {
+            if (args.length > 0) {
                 HTTP_PORT = Integer.parseInt(args[0]);
             }
 
@@ -88,27 +89,25 @@ public class Main {
             webServer.start();
             wsContextHandler.start();
             handlerColl.mapContexts();
-            logger.info("QRNG web service started.");
+            logger.info("QRNG web service started");
 
             new Thread(() -> {
                 // consumer thread
-                for(;;) {
+                for (; ; ) {
                     byte[] block = null;
                     try {
                         block = bigBuffer.consume(); // can throw BufferUnderflowException
                         QrngWebSocket socket = usersQueue.takeUser(); // blocking
                         socket.getRemote().sendBytes(ByteBuffer.wrap(block));
-                    }
-                    catch (BufferUnderflowException bufferEmpty) {
+                    } catch (BufferUnderflowException bufferEmpty) {
                         try {
                             // wait some time in hope that bigBuffer gets replenished
                             Thread.sleep(1000);
                         } catch (InterruptedException e) {
                             // we don't care of interrupts; we will wait again, if needed
                         }
-                    }
-                    catch (Exception ex) {
-                        logger.error("Exception in the consumer thread: "+ex.getMessage());
+                    } catch (Exception ex) {
+                        logger.error("Exception in the consumer thread: " + ex.getMessage());
                     }
                 }
             }).start();
@@ -119,8 +118,7 @@ public class Main {
                 logger.error(ex.getMessage());
             }
             logger.info("QRNG web service stopped.");
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             logger.error(e.getMessage());
         }
     }

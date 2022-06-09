@@ -7,7 +7,6 @@ repositories {
       mavenCentral()
 }
 
-
 compileJava.options.encoding = "UTF-8"
 
 dependencies {
@@ -17,6 +16,9 @@ dependencies {
 
     // gson
     implementation 'com.google.code.gson:gson:2.9.+'
+
+    // cactoos (for pure OOP)
+    implementation 'org.cactoos:cactoos:0.+'
 
     // jetty server
     implementation 'org.eclipse.jetty:jetty-server:11.+'
@@ -54,7 +56,7 @@ def JAVA_LIBRARY_PATH_PLACEHOLDER=projectDir.toPath().resolve("dll").resolve(get
 
 application {
 //    mainClass.set("lv.lumii.qrng.Main")
-    mainClass.set("lv.lumii.qrng.QuantisThread")
+    mainClass.set("lv.lumii.qrng.QuantisThreadPool")
     applicationDefaultJvmArgs = ['-Djava.library.path='+JAVA_LIBRARY_PATH_PLACEHOLDER]
 }
 

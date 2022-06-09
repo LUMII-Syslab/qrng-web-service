@@ -1,10 +1,15 @@
 package lv.lumii.qrng;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
-import java.util.Queue;
+import java.util.*;
 
 public class BigBuffer {
+
+    private static Logger logger = LoggerFactory.getLogger(BigBuffer.class);
 
     /**
      * queue - the queue of 1KiB blocks (not-thread-safe, we will synchronize manually).
@@ -12,7 +17,7 @@ public class BigBuffer {
     private Queue<byte[]> blocks;
     private static final int DEFAULT_MAX_BLOCKS = 100*1024;
     private int maxBlocks;
-    // there will be at most maxBlocks 1KiB blocks;
+    // there will be at most maxBlocks 1 KiB blocks;
     // thus, the default max RAM usage by the buffer is 100 MiB
 
     public BigBuffer() {
@@ -23,13 +28,17 @@ public class BigBuffer {
         if (maxBlocks >= 1)
             this.maxBlocks = maxBlocks;
         // else keep the default value
+
+        blocks = new LinkedList<>();
     }
 
-    public synchronized void replenish(byte[] randomBlock1KiB) throws BufferOverflowException {
+    public synchronized void replenishWith(byte[] bytes) throws BufferOverflowException {
+        if (bytes.length != 1024)
+            throw new IllegalArgumentException("Each block must be 1024 bytes long (got "+bytes.length+" bytes)");
         if (blocks.size() >= maxBlocks)
             throw new BufferOverflowException();
+        blocks.add(bytes);
 
-        blocks.add(randomBlock1KiB);
     }
 
     public synchronized byte[] consume() throws BufferUnderflowException {
