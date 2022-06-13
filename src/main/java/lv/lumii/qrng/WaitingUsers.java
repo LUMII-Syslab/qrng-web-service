@@ -5,7 +5,7 @@ import java.nio.BufferOverflowException;
 import java.util.*;
 import java.util.concurrent.PriorityBlockingQueue;
 
-public class UsersQueue<User> {
+public class WaitingUsers<User> {
     private int maxUsersToTrail = 1000;
     private long time = 0;
     // ^^^ will be incremented when registering each next user;
@@ -13,7 +13,7 @@ public class UsersQueue<User> {
     private PriorityBlockingQueue<Registration> prioritizedRegistrations;
     private Map<User, Registration> registeredUsers;
 
-    public UsersQueue(int maxUsersToTrail) {
+    public WaitingUsers(int maxUsersToTrail) {
         if (maxUsersToTrail > 0)
             this.maxUsersToTrail = maxUsersToTrail;
         this.prioritizedRegistrations = new PriorityBlockingQueue<>(this.maxUsersToTrail);
@@ -44,7 +44,7 @@ public class UsersQueue<User> {
     /**
      * Takes out the user who waited for the longest period of time.
      * This is a blocking call (it will wait for the user, if there is none).
-     * However, the call will not interfere with other synchronized methods of UsersQueue.
+     * However, the call will not interfere with other synchronized methods of WaitingUsers.
      *
      * @return the user who waited the longest
      * @throws InterruptedException if there are no waiting users in the registry,
@@ -54,10 +54,12 @@ public class UsersQueue<User> {
         Registration u1 = prioritizedRegistrations.take();
         synchronized (this) {
             Registration u2 = registeredUsers.get(u1.user());
-            if (u1 == u2)
+            if (u1 == u2) {
                 registeredUsers.remove(u1.user());
+            }
             // ^^^ remove only our registration;
-            //     otherwise, that is a new registration, and the user is waiting again...
+            //     otherwise, that is a new registration (that might occur right before the "synchronized" block),
+            //     and the user is waiting again...
         }
         return u1.user();
     }

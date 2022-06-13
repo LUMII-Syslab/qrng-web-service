@@ -11,7 +11,7 @@ compileJava.options.encoding = "UTF-8"
 
 dependencies {
     /* Warning: do not use log4j < 2.16 because if a serious (10 of 10 points) vulnerability! */
-    implementation 'org.slf4j:slf4j-api:2.+';
+    implementation 'org.slf4j:slf4j-api:2.+'
     implementation 'org.slf4j:slf4j-simple:2.+'
 
     // gson
@@ -35,19 +35,19 @@ test {
     useJUnitPlatform()
 }
 
-def getOsName(project) {
-    final String osName = System.getProperty("os.name").toLowerCase();
+static def getOsName() {
+    final String osName = System.getProperty("os.name").toLowerCase()
 
     if (osName.contains("linux")) {
-        return ("Linux");
+        return ("Linux")
     } else if (osName.contains("windows")) {
-        return ("Windows_NT"); // as %OS%
+        return ("Windows_NT") // as %OS%
     }
-    return ("Unsupported OS by the IQD Quantis QRNG device");
+    return ("Unsupported OS by the IQD Quantis QRNG device")
 }
 
-def getOsArch(project) {
-   return System.properties['os.arch'];
+static def getOsArch() {
+   return System.properties['os.arch']
     // in x86_64 Windows, this returns amd64, which is ok, since in Windows, %PROCESSOR_ARCHITECTURE%=AMD64 and the case does not matter
 }
 
@@ -55,8 +55,7 @@ def JAVA_LIBRARY_PATH_PLACEHOLDER=projectDir.toPath().resolve("dll").resolve(get
 // ^^^ this placeholder is used as applicationDefaultJvmArgs when invoking: gradle run
 
 application {
-//    mainClass.set("lv.lumii.qrng.Main")
-    mainClass.set("lv.lumii.qrng.QuantisThreadPool")
+    mainClass.set("lv.lumii.qrng.Main")
     applicationDefaultJvmArgs = ['-Djava.library.path='+JAVA_LIBRARY_PATH_PLACEHOLDER]
 }
 

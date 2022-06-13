@@ -11,9 +11,6 @@ import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerI
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.BufferUnderflowException;
-import java.nio.ByteBuffer;
-
 /**
  * Copyright (c) Institute of Mathematics and Computer Science, University of Latvia
  * License: MIT
@@ -25,7 +22,7 @@ import java.nio.ByteBuffer;
  * compiled with quantum-resistant algorithms from openquantumsafe.org.
  * <p>
  * HAProxy will provide the HTTPS web socket end point identified by
- * a quantum-safe server certificate identified by our self-signed quantum-safe CA key.
+ * a quantum-safe server certificate signed by our self-signed quantum-safe CA key.
  */
 public class Main {
 
@@ -44,7 +41,7 @@ public class Main {
                 HTTP_PORT = Integer.parseInt(args[0]);
             }
 
-            Server webServer = new Server();
+            final Server webServer = new Server();
             ///// HTTP CONFIG /////
 
             HttpConfiguration http_config = new HttpConfiguration();
@@ -73,14 +70,15 @@ public class Main {
 
             ///// BIG BUFFER AND USERS /////
             BigBuffer bigBuffer = new BigBuffer();
-            UsersQueue<QrngWebSocket> usersQueue = new UsersQueue<>(1000);
+            WaitingUsers<QrngWebSocketClient> waitingUsers = new WaitingUsers<>(1000);
 
             ///// Jetty 11.x Web Socket servlet /////
             Servlet websocketServlet = new JettyWebSocketServlet() {
                 @Override
                 protected void configure(JettyWebSocketServletFactory factory) {
-                    factory.addMapping("/", (req, res) -> new QrngWebSocket(bigBuffer, usersQueue));
-                    //factory.register(BridgeSocket.class);
+                    factory.addMapping("/", (req, res) -> new QrngWebSocketClient(bigBuffer, waitingUsers));
+                    // ^^^ Variant with URL path:
+                    //     factory.addMapping("/path", (req, res) -> new QrngWebSocket(bigBuffer, waitingUsers));
                 }
             };
             wsContextHandler.addServlet(new ServletHolder(websocketServlet), "/*");
@@ -91,35 +89,39 @@ public class Main {
             handlerColl.mapContexts();
             logger.info("QRNG web service started");
 
-            new Thread(() -> {
-                // consumer thread
-                for (; ; ) {
-                    byte[] block = null;
+            final QuantisThreadPool pool = new QuantisThreadPool(bigBuffer);
+            pool.startAll();
+            logger.info("Replenishing thread(s) started");
+
+            final ConsumingThread consumingThread = new ConsumingThread(bigBuffer, waitingUsers);
+            consumingThread.start();
+            logger.info("Consuming thread started");
+
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                @Override
+                public void run() {
+                    consumingThread.interrupt();
+                    logger.info("Consuming thread asked to interrupt");
+                    pool.stopAll();
+                    logger.info("Replenishing thread(s) asked to interrupt");
                     try {
-                        block = bigBuffer.consume(); // can throw BufferUnderflowException
-                        QrngWebSocket socket = usersQueue.takeUser(); // blocking
-                        socket.getRemote().sendBytes(ByteBuffer.wrap(block));
-                    } catch (BufferUnderflowException bufferEmpty) {
-                        try {
-                            // wait some time in hope that bigBuffer gets replenished
-                            Thread.sleep(1000);
-                        } catch (InterruptedException e) {
-                            // we don't care of interrupts; we will wait again, if needed
-                        }
-                    } catch (Exception ex) {
-                        logger.error("Exception in the consumer thread: " + ex.getMessage());
+                        webServer.stop();
+                        logger.info("Web server asked to stop");
+                    } catch (Exception e) {
+                        logger.error("Could not stop the web server", e);
                     }
                 }
-            }).start();
+            });
 
             try {
                 webServer.join();
             } catch (InterruptedException ex) {
-                logger.error(ex.getMessage());
+                logger.error("Web server join failed", ex);
             }
             logger.info("QRNG web service stopped.");
         } catch (Exception e) {
-            logger.error(e.getMessage());
+            logger.error("QRNG service exception "+e.getClass().getSimpleName(), e.getMessage());
+            e.printStackTrace();
         }
     }
 }

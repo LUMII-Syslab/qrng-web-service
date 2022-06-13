@@ -2,7 +2,6 @@ package lv.lumii.qrng;
 
 import com.idquantique.quantis.Quantis;
 import com.idquantique.quantis.QuantisException;
-import org.cactoos.Scalar;
 import org.cactoos.scalar.Sticky;
 import org.cactoos.scalar.Unchecked;
 import org.slf4j.Logger;
@@ -13,10 +12,10 @@ import java.util.List;
 
 public class QuantisThreadPool {
 
-    private static Logger logger = LoggerFactory.getLogger(QuantisThreadPool.class);
+    private static final Logger logger = LoggerFactory.getLogger(QuantisThreadPool.class);
 
-    private BigBuffer bigBuffer;
-    private Unchecked<List<Thread>> threads;
+    private final BigBuffer bigBuffer;
+    private final Unchecked<List<Thread>> threads;
 
 
     private long totalSpeed = 0;
@@ -29,7 +28,7 @@ public class QuantisThreadPool {
 
     public QuantisThreadPool(BigBuffer bigBuffer) {
         this.bigBuffer = bigBuffer;
-        this.threads = new Unchecked<>(new Sticky<>(() -> createSuspendedThreads()));
+        this.threads = new Unchecked<>(new Sticky<>(this::createSuspendedThreads)); // true OOP style!
     }
 
     private List<Thread> createSuspendedThreads() throws QuantisException {
@@ -67,7 +66,7 @@ public class QuantisThreadPool {
         }
     }
 
-    public void stopAll() throws Exception {
+    public void stopAll() {
         for (Thread t : this.threads.value()) {
             if (t.isAlive()) {
                 logger.debug("Interrupting " + t + " on stopAll()");
@@ -82,7 +81,7 @@ public class QuantisThreadPool {
 
     /**
      * @param args the command line arguments
-     * @throws QuantisException
+     * @throws Exception any exception that forces the main app to terminate
      */
     public static void main(String[] args) throws Exception { // test
         System.out.println("Java is running on " + System.getProperty("os.name") + "/" + System.getProperty("os.arch") + "\n");

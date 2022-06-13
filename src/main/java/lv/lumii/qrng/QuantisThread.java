@@ -23,6 +23,7 @@ public class QuantisThread extends Thread {
         this.deviceIndex = deviceIndex;
         this.bigBuffer = bigBuffer;
         this.threadPool = threadPool;
+        this.setName("QuantisThread-"+deviceType.name()+"#"+deviceIndex);
     }
 
     @Override
@@ -52,8 +53,9 @@ public class QuantisThread extends Thread {
                 byte[] bytes = quantis.Read(currentDeviceSpeed);
                 int nBlocks = bytes.length / 1024;
 
-                logger.debug("Replenishing " + nBlocks + " blocks...");
+                logger.debug("Replenishing with " + nBlocks + " blocks:");
                 for (int i = 0; i < nBlocks; i++) {
+                    logger.debug("  Replenishing block " +(i+1)+" of "+ nBlocks + " into a buffer with "+bigBuffer.capacityInBlocks()+"-block capacity...");
                     boolean isReplenished = false;
                     while (!isReplenished) {
                         try {
@@ -61,7 +63,7 @@ public class QuantisThread extends Thread {
                             isReplenished = true;
                         } catch (BufferOverflowException ex) {
                             int ms = (int) (Math.random() * 1000); // 0-1000 ms
-                            logger.debug("Buffer is full, waiting for " + ms + " ms");
+                            logger.trace("Buffer is full, waiting for " + ms + " ms");
                             Thread.sleep(ms);
                         }
                     }

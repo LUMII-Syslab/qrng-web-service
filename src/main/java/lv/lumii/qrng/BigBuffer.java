@@ -16,7 +16,7 @@ public class BigBuffer {
      */
     private Queue<byte[]> blocks;
     private static final int DEFAULT_MAX_BLOCKS = 100*1024;
-    private int maxBlocks;
+    private final int maxBlocks;
     // there will be at most maxBlocks 1 KiB blocks;
     // thus, the default max RAM usage by the buffer is 100 MiB
 
@@ -27,7 +27,8 @@ public class BigBuffer {
     public BigBuffer(int maxBlocks) {
         if (maxBlocks >= 1)
             this.maxBlocks = maxBlocks;
-        // else keep the default value
+        else
+            this.maxBlocks = DEFAULT_MAX_BLOCKS;
 
         blocks = new LinkedList<>();
     }
@@ -42,9 +43,13 @@ public class BigBuffer {
     }
 
     public synchronized byte[] consume() throws BufferUnderflowException {
-        if (blocks.size() > 0)
+        if (blocks.size() == 0)
             throw new BufferUnderflowException();
         return blocks.remove();
+    }
+
+    public int capacityInBlocks() {
+        return maxBlocks;
     }
 
 
