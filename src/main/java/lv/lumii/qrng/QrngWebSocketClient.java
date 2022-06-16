@@ -167,9 +167,8 @@ public class QrngWebSocketClient extends WebSocketAdapter {
      * Sends the given block of random bytes to the client.
      * If the client's desiredSize has not been fulfilled, enqueue the client once again.
      * @param bytes
-     * @throws IOException
      */
-    public void sendRandomBytes(byte[] bytes) throws IOException {
+    public void sendRandomBytes(byte[] bytes) {
         synchronized (desiredSize) {
             if (desiredSize.size() < bytes.length) // fewer bytes desired than the #bytes we are offering
                 bytes = Arrays.copyOfRange(bytes, 0, desiredSize.size());
@@ -178,8 +177,15 @@ public class QrngWebSocketClient extends WebSocketAdapter {
                 desiredSize.fulfill(bytes.length);
                 System.out.println((step++) + " step fulfilled " + bytes.length);
 
-                if (!desiredSize.fulfilled())
-                    waitingUsers.enqueue(this);
+                if (!desiredSize.fulfilled()) {
+                    try {
+                        waitingUsers.enqueue(this);
+                    }
+                    catch(KeyAlreadyExistsException e) {
+                        // it is ok, if the key already exists
+                    }
+
+                }
             }
         }
     }
