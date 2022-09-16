@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [ "$1" = "" ]; then
-  echo Usage: $0 client-name
+if [ "$2" = "" ]; then
+  echo Usage: $0 client-name token-validity-in-days
   exit
 fi
 
@@ -11,6 +11,7 @@ export OQS_OPENSSL=/opt/oqs/bin/openssl
 #export OQS_OPENSSL_REQ_ARGS=" -config $HOME/quantum/openssl/apps/openssl.cnf"
 
 export CLIENT_NAME=$1
+export DAYS=$2
 
 # Set a default QSC signature algorithm from the list at https://github.com/open-quantum-safe/openssl#authentication
 export SIG_ALG=sphincsshake256128frobust
@@ -27,10 +28,10 @@ mkdir ${CLIENT_NAME}
 
 
 echo "Generating the client key pair for the user ${1}..."
-${OQS_OPENSSL} req -new -newkey ${SIG_ALG} -keyout ${CLIENT_KEY} -out ${CLIENT_CSR} -nodes ${OQS_OPENSSL_REQ_ARGS}
+${OQS_OPENSSL} req -new -newkey ${SIG_ALG} -keyout ${CLIENT_KEY} -out ${CLIENT_CSR} -nodes ${OQS_OPENSSL_REQ_ARGS} -config sphincs_client.cnf
 
 echo "Signing the client key pair for the user ${CLIENT_NAME}..."
-${OQS_OPENSSL} x509 -req -in ${CLIENT_CSR} -out ${CLIENT_CRT} -CA ca_sphincs.crt -CAkey ca_sphincs.key -CAcreateserial -extensions v3_req -extensions v3_req -extfile sphincs_server.cnf
+${OQS_OPENSSL} x509 -req -in ${CLIENT_CSR} -out ${CLIENT_CRT} -CA ca_sphincs.crt -CAkey ca_sphincs.key -CAcreateserial -days $DAYS -extfile sphincs_client.cnf
 
 #echo "Importing our root CA into Java key store..."
 #keytool -import -trustcacerts -alias root -file ca_sphincs.crt -keystore ${KEYSTORE} -storepass ${STOREPASS}
