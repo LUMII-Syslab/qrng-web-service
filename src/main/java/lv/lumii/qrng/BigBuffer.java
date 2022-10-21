@@ -15,7 +15,7 @@ public class BigBuffer {
      * queue - the queue of 1KiB blocks (not-thread-safe, we will synchronize manually).
      */
     private Queue<byte[]> blocks;
-    private static final int DEFAULT_MAX_BLOCKS = 100*1024;
+    private static final int DEFAULT_MAX_BLOCKS = 100 * 1024;
     private final int maxBlocks;
     // there will be at most maxBlocks 1 KiB blocks;
     // thus, the default max RAM usage by the buffer is 100 MiB
@@ -35,7 +35,7 @@ public class BigBuffer {
 
     public synchronized void replenishWith(byte[] bytes) throws BufferOverflowException {
         if (bytes.length != 1024)
-            throw new IllegalArgumentException("Each block must be 1024 bytes long (got "+bytes.length+" bytes)");
+            throw new IllegalArgumentException("Each block must be 1024 bytes long (got " + bytes.length + " bytes)");
         if (blocks.size() >= maxBlocks)
             throw new BufferOverflowException();
         blocks.add(bytes);
@@ -52,5 +52,8 @@ public class BigBuffer {
         return maxBlocks;
     }
 
+    public int usedCapacityInBlocks() {
+        return blocks.size();
+    }
 
 }

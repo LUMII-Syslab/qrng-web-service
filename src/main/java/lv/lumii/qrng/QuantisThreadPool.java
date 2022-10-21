@@ -16,18 +16,21 @@ public class QuantisThreadPool {
 
     private final BigBuffer bigBuffer;
     private final Unchecked<List<Thread>> threads;
+    private final Runnable onAllStopped;
 
 
     private long totalSpeed = 0;
+    private long totalStarted = 0;
 
     /*package-visibility*/
     synchronized void addSpeed(long delta) {
         totalSpeed += delta;
-        logger.debug("Current speed is " + totalSpeed + " bytes/sec");
+        logger.info("Current speed is " + totalSpeed + " bytes/sec");
     }
 
-    public QuantisThreadPool(BigBuffer bigBuffer) {
+    public QuantisThreadPool(BigBuffer bigBuffer, Runnable onAllStopped) {
         this.bigBuffer = bigBuffer;
+        this.onAllStopped = onAllStopped;
         this.threads = new Unchecked<>(new Sticky<>(this::createSuspendedThreads)); // true OOP style!
     }
 
@@ -39,18 +42,40 @@ public class QuantisThreadPool {
 
         List<Thread> threads = new LinkedList<>();
 
+        Runnable onOneStopped = new Runnable() {
+            @Override
+            public void run() {
+                    totalStarted--;
+                    if (totalStarted==0 && onAllStopped!=null)
+                        onAllStopped.run();
+            }
+        };
+
         for (int i = 0; i < countPci; i++) {
-            Thread t = new QuantisThread(Quantis.QuantisDeviceType.QUANTIS_DEVICE_PCI, i, bigBuffer, this);
-            threads.add(t);
-        }
+            try {
+                Thread t = new QuantisThread(Quantis.QuantisDeviceType.QUANTIS_DEVICE_PCI, i, bigBuffer, this, onOneStopped);
+                threads.add(t);
+            }
+            catch (QuantisException e) {
+                String msg = "Quantis device PCI#"+i+" is not working. Do not using it.";
+                logger.error(msg);
+            }
+
+    }
 
         for (int i = 0; i < countUsb; i++) {
-            Thread t = new QuantisThread(Quantis.QuantisDeviceType.QUANTIS_DEVICE_USB, i, bigBuffer, this);
-            threads.add(t);
+            try {
+                Thread t = new QuantisThread(Quantis.QuantisDeviceType.QUANTIS_DEVICE_USB, i, bigBuffer, this, onOneStopped);
+                threads.add(t);
+            }
+            catch (QuantisException e) {
+                String msg = "Quantis device USB#"+i+" is not working. Do not using it.";
+                logger.error(msg);
+            }
         }
 
         if ((countPci == 0) && (countUsb == 0))
-            throw new QuantisException("No Quantis device installed.");
+            throw new QuantisException("No Quantis device installed or none is usable.");
 
         return threads;
     }
@@ -59,6 +84,7 @@ public class QuantisThreadPool {
         try {
             for (Thread t : this.threads.value()) {
                 t.start();
+                totalStarted++;
             }
         } catch (Exception e) {
             stopAll();
@@ -73,6 +99,7 @@ public class QuantisThreadPool {
                 t.interrupt();
             }
         }
+        totalStarted = 0;
     }
 
     public long getMaxReplenishingSpeed() {
@@ -92,7 +119,7 @@ public class QuantisThreadPool {
         System.out.println("Using Quantis Library v" + Quantis.GetLibVersion() + "\n");
 
         BigBuffer buf = new BigBuffer(10);
-        QuantisThreadPool pool = new QuantisThreadPool(buf);
+        QuantisThreadPool pool = new QuantisThreadPool(buf, ()->System.out.println("Zero speed reached"));
         System.out.println("Total replenishing speed (initial): " + pool.getMaxReplenishingSpeed());
         pool.startAll();
 

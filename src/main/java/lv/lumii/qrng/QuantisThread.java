@@ -15,15 +15,20 @@ public class QuantisThread extends Thread {
     private Quantis.QuantisDeviceType deviceType;
     private int deviceIndex;
     private BigBuffer bigBuffer;
-
     private QuantisThreadPool threadPool;
 
-    public QuantisThread(Quantis.QuantisDeviceType deviceType, int deviceIndex, BigBuffer bigBuffer, QuantisThreadPool threadPool) {
+    private Quantis quantis;
+    private Runnable onDone;
+
+    public QuantisThread(Quantis.QuantisDeviceType deviceType, int deviceIndex, BigBuffer bigBuffer, QuantisThreadPool threadPool, Runnable onDone) throws QuantisException {
         this.deviceType = deviceType;
         this.deviceIndex = deviceIndex;
         this.bigBuffer = bigBuffer;
         this.threadPool = threadPool;
-        this.setName("QuantisThread-"+deviceType.name()+"#"+deviceIndex);
+        this.onDone = onDone;
+        this.setName("QuantisThread-" + deviceType.name() + "#" + deviceIndex);
+        quantis = new Quantis(deviceType, deviceIndex);
+        quantis.Read(1000); // test; can throw a QunatisException
     }
 
     @Override
@@ -33,7 +38,6 @@ public class QuantisThread extends Thread {
 
     @Override
     public void run() {
-        Quantis quantis = new Quantis(deviceType, deviceIndex);
         logger.info(this + " started...");
 
         int currentDeviceSpeed = 0;
@@ -50,12 +54,34 @@ public class QuantisThread extends Thread {
                 }
                 logger.debug("Reading " + (currentDeviceSpeed) + " bytes...");
 
-                byte[] bytes = quantis.Read(currentDeviceSpeed);
+                byte[] bytes;
+                // at most 10 tries to read bytes from the quantis device
+                for (int tries = 10; ; tries--) {
+                    try {
+                        bytes = quantis.Read(currentDeviceSpeed);
+                        break; // stop the cycle
+                    } catch (QuantisException qex) {
+                        logger.error("QuantisException in QuantisThread", qex);
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e) {
+                            throw new Exception("Recovering from QuantisException interrupted");
+                        }
+                        if (tries > 0) {
+                            logger.error("Recovering after QuantisException (" + tries + " tries remaining)...");
+                        } else {
+                            throw new Exception("Too many QuantisException-s. We won't try to recover any more.");
+                        }
+                    }
+                }
+
                 int nBlocks = bytes.length / 1024;
 
                 logger.debug("Replenishing with " + nBlocks + " blocks:");
                 for (int i = 0; i < nBlocks; i++) {
-                    logger.debug("  Replenishing block " +(i+1)+" of "+ nBlocks + " into a buffer with "+bigBuffer.capacityInBlocks()+"-block capacity...");
+                    logger.debug("  Replenishing block " + (i + 1) + " of " + nBlocks
+                            + " into a buffer with " + bigBuffer.capacityInBlocks() + "-block capacity and "
+                            + bigBuffer.usedCapacityInBlocks() + " already used blocks...");
                     boolean isReplenished = false;
                     while (!isReplenished) {
                         try {
@@ -63,21 +89,21 @@ public class QuantisThread extends Thread {
                             isReplenished = true;
                         } catch (BufferOverflowException ex) {
                             int ms = (int) (Math.random() * 1000); // 0-1000 ms
-                            logger.trace("Buffer is full, waiting for " + ms + " ms");
+                            logger.debug("Buffer is full, waiting for " + ms + " ms");
                             Thread.sleep(ms);
                         }
                     }
                 }
             }
 
-        } catch (QuantisException e) {
-            logger.error("QuantisException in QuantisThread", e);
         } catch (InterruptedException e) {
             logger.info(this + " has been interrupted with InterruptedException");
         } catch (Exception e) {
-            logger.error("Error in QuantisThread", e);
+            logger.error("Exception in " + this, e);
         } finally {
             threadPool.addSpeed(-currentDeviceSpeed);
+            if (onDone != null)
+                onDone.run();
         }
 
     }

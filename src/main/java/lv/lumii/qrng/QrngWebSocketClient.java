@@ -155,7 +155,7 @@ public class QrngWebSocketClient extends WebSocketAdapter {
         int n = bytesToInt(Arrays.copyOfRange(payload, offset, offset+len));
         synchronized (desiredSize) {
             desiredSize.update(n);
-            System.out.println("updated to "+n);
+            logger.debug("Socket "+this+" was requested to send "+n+" random bytes");
 
             if (!desiredSize.fulfilled())
                 waitingUsers.enqueue(this);
@@ -174,8 +174,8 @@ public class QrngWebSocketClient extends WebSocketAdapter {
                 bytes = Arrays.copyOfRange(bytes, 0, desiredSize.size());
             if (bytes.length>0) {
                 this.getRemote().sendBytes(ByteBuffer.wrap(bytes), this.writeCallback); // async
+                logger.debug("Socket "+this+" has just sent "+bytes.length+" random bytes");
                 desiredSize.fulfill(bytes.length);
-                System.out.println((step++) + " step fulfilled " + bytes.length);
 
                 if (!desiredSize.fulfilled()) {
                     try {

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 package lv.lumii.qrng;
 
+import java.io.*;
+
 import jakarta.servlet.*;
 import org.eclipse.jetty.websocket.server.*;
 
@@ -26,7 +28,21 @@ import org.slf4j.LoggerFactory;
  */
 public class Main {
 
-    private static Logger logger = LoggerFactory.getLogger(Main.class);
+    private static Logger logger;
+
+    static {
+
+        /*
+        do not use log4j2 in native executables/libraries!!!
+        slf4j with simple logger is ok;
+
+        gradle dependencies:
+            implementation 'org.slf4j:slf4j-api:2.+'
+            implementation 'org.slf4j:slf4j-simple:2.+'
+         */
+
+        logger = LoggerFactory.getLogger(Main.class);
+    }
 
     /***
      * The insecure (non-HTTPS) port where the QRNG web service listens on "localhost".
@@ -89,11 +105,17 @@ public class Main {
             handlerColl.mapContexts();
             logger.info("QRNG web service started");
 
-            final QuantisThreadPool pool = new QuantisThreadPool(bigBuffer);
+            final ConsumingThread consumingThread = new ConsumingThread(bigBuffer, waitingUsers);
+            final QuantisThreadPool pool = new QuantisThreadPool(bigBuffer,
+                    () -> {
+                        logger.error("All replenishing threads stopped. Exiting...");
+                        System.exit(1);
+                    }
+            );
+
+
             pool.startAll();
             logger.info("Replenishing thread(s) started");
-
-            final ConsumingThread consumingThread = new ConsumingThread(bigBuffer, waitingUsers);
             consumingThread.start();
             logger.info("Consuming thread started");
 
@@ -120,7 +142,7 @@ public class Main {
             }
             logger.info("QRNG web service stopped.");
         } catch (Exception e) {
-            logger.error("QRNG service exception "+e.getClass().getSimpleName(), e.getMessage());
+            logger.error("QRNG service exception " + e.getClass().getSimpleName(), e.getMessage());
             e.printStackTrace();
         }
     }
