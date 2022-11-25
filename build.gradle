@@ -70,6 +70,12 @@ startScripts {
 
 installDist {
     doLast {
+        println "Copying ca-scripts into the distribution"
+        copy {
+          from(projectDir)
+          into(destinationDir)          
+          include("ca-scripts/**")
+        }
         println "Copying native DLLs/libraries into the distribution"
         copy {
           from(projectDir)
@@ -85,15 +91,12 @@ installDist {
 
 run {
     //args 'arg'
-    final String libPath = projectDir.toPath().resolve("dll").resolve(getOsName()+'-'+getOsArch())
     doFirst {
-       jvmArgs '-Djava.library.path='+libPath+' '+
-                '-Dorg.slf4j.simpleLogger.defaultLogLevel=DEBUG'
+       jvmArgs '-Djava.library.path='+projectDir.toPath().resolve("dll").resolve(getOsName()+'-'+getOsArch())
        applicationDefaultJvmArgs = jvmArgs
-       systemProperty('java.library.path',libPath)
+       systemProperty('java.library.path',jvmArgs)
     }   
-       jvmArgs '-Djava.library.path='+libPath+' '+
-                '-Dorg.slf4j.simpleLogger.defaultLogLevel=DEBUG'
-       applicationDefaultJvmArgs = jvmArgs
-       systemProperty('java.library.path',libPath)
+    jvmArgs '-Djava.library.path='+projectDir.toPath().resolve("dll").resolve(getOsName()+'-'+getOsArch())
+    systemProperty('java.library.path',jvmArgs)
+    applicationDefaultJvmArgs = jvmArgs
 }
