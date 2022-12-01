@@ -55,4 +55,4 @@ echo "Validating..."
 keytool -keystore ${KEYSTORE} -storepass ${STOREPASS} -v -list -storetype pkcs12 -alias $CLIENT_ALIAS
 
 
-echo "Deploy the ${KEYSTORE} file to the particular user."
+echo "We are done. Please, deploy 3 files - ${KEYSTORE}, ca.truststore, and qrng.properties - to the particular user!"
