@@ -9,17 +9,22 @@ by Sergejs Kozlovičs, 2022
 
 ## The scripts
 
-* `gen_sphincs_ca.sh` generates a CA root key pair and a self-signed certificate. The CA key will be used to sign server and client certificates (default expiration time is set to 10 years).
-  * **Deploy** the generated `ca.truststore` file (Java trust store) to all users. The users will need it for verifying the QRNG server certificate: whether it is signed by our CA.
+* `ca_init.sh` generates a CA root key pair and creates the corresponding self-signed CA certificate. The CA key will be used to sign server and client certificates (default expiration time is set to 10 years).
   
-  * Use the `ca_sphincs.crt` file in the HAProxy configuration. HAProxy will use it to validate users: wheter their (=client) certificates are signed by our CA.
+  * **Deploy** the generated `ca.truststore` file (Java trust store) to all QRNG users. The users will need it for verifying the QRNG server certificate: whether it is signed by our CA.
   
-* `gen_sphincs_server_key.sh` generates and signs (by our CA) a server certificate.  The validity time is 1 year.
-  * Use the `sphincs_server.pem` file (contaiting both the server private key and its certificate) in the HAProxy configuration.
+  * Use the `ca.crt` file in the HAProxy configuration. HAProxy will use it to validate users: wheter their client certificates are signed by our CA.
+
+* `ca_renew.sh` re-generates the CA root key pair and its self-signed CA certificate. This script has to be called when the previous CA key pair is about to expire.
+
+* `new_server_key.sh` generates and signs (by our CA) a server certificate.  The first two arguments specify the openssl configuration file (e.g., `server.cnf` ) and the certificate expiration time (in days).
   
-* `gen_sphincs_client_key.sh <user-name>` generates and signs (by our CA) a client certificate. Each user should have their own client certificate.
+  * **Specify** the `server.pem` file (contaiting both the server private key and its certificate) in the HAProxy configuration at the server side.
+
+* `new_client_key.sh` generates and signs (by our CA) a client certificate. The first two arguments specify the user name (no spaces or special symbols, please!) and the certificate expiration time (in days). Each user should have their own client certificate.
+  
   * **Deploy** the `token.keystore` file (containing the client private key and its signed certificate) to the particular user.
 
 ## The qrng.properties file
 
-For each user, deploy also the `qrng.properties` file, which contains info about the QRNG service host and port, as well as the information about the trust store (for validating the server) and key store (for identifying the client). The client-side buffer size can also be specified.
+Also, edit (according to your setup) the `qrng.properties` file, and **deploy** it to all QRNG users as well. This file contains info about the QRNG service host and port, as well as the information about the trust store (for validating the server) and key store (for identifying the client). The client-side buffer size can also be specified.
