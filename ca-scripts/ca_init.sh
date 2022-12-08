@@ -1,4 +1,8 @@
 #!/bin/bash
+#
+# Generates a new CA key pair to be used for signing server and client certificates.
+# If the CA key pair already exists, does nothing.
+#
 # Copyright (c) Institute of Mathematics and Computer Science, University of Latvia
 # Licence: MIT
 # Contributors:

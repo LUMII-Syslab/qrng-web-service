@@ -30,5 +30,5 @@ popd
 :: === cygwin64 and packages installed ====
 :DOS2UNIX_OK
 
-C:\cygwin64\bin\dos2unix -q "%~dp0\ca_renew.sh"
-C:\cygwin64\bin\bash "%~dp0\ca_renew.sh"
+C:\cygwin64\bin\dos2unix -q "%~dp0\new_server_key.sh"
+C:\cygwin64\bin\bash "%~dp0\new_server_key.sh" %1 %2
