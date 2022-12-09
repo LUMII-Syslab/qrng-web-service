@@ -2,6 +2,7 @@
 package lv.lumii.qrng;
 
 import java.io.*;
+import java.nio.file.Path;
 
 import jakarta.servlet.*;
 import org.eclipse.jetty.websocket.server.*;
@@ -30,8 +31,9 @@ public class Main {
 
     private static Logger logger;
 
-    static {
+    private static Path myDir = new RootDirectory().path();
 
+    static {
         /*
         do not use log4j2 in native executables/libraries!!!
         slf4j with simple logger is ok;
@@ -41,7 +43,9 @@ public class Main {
             implementation 'org.slf4j:slf4j-simple:2.+'
          */
 
+        System.setProperty("org.slf4j.simpleLogger.logFile", "C:\\Users\\SysLab\\source\\qrng-web-service\\qqq.log");
         logger = LoggerFactory.getLogger(Main.class);
+        logger.error("myDir="+myDir);
     }
 
     /***
@@ -104,6 +108,10 @@ public class Main {
             wsContextHandler.start();
             handlerColl.mapContexts();
             logger.info("QRNG web service started");
+            new FileWatchman(myDir, "NotifyFile", (fileName) -> {
+                System.out.println("CALLBACK "+fileName);
+                System.exit(0);
+            }, true).start();
 
             final ConsumingThread consumingThread = new ConsumingThread(bigBuffer, waitingUsers);
             final QuantisThreadPool pool = new QuantisThreadPool(bigBuffer,
@@ -142,7 +150,7 @@ public class Main {
             }
             logger.info("QRNG web service stopped.");
         } catch (Exception e) {
-            logger.error("QRNG service exception " + e.getClass().getSimpleName(), e.getMessage());
+            logger.error("QRNG service exception " + e.getClass().getSimpleName(), e);
             e.printStackTrace();
         }
     }
