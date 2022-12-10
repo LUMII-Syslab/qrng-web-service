@@ -2,7 +2,9 @@ package lv.lumii.qrng;
 
 import com.idquantique.quantis.Quantis;
 import com.idquantique.quantis.QuantisException;
+import org.cactoos.Scalar;
 import org.cactoos.scalar.Sticky;
+import org.cactoos.scalar.Synced;
 import org.cactoos.scalar.Unchecked;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +17,7 @@ public class QuantisThreadPool {
     private static final Logger logger = LoggerFactory.getLogger(QuantisThreadPool.class);
 
     private final BigBuffer bigBuffer;
-    private final Unchecked<List<Thread>> threads;
+    private final Scalar<List<Thread>> threads;
     private final Runnable onAllStopped;
 
 
@@ -31,7 +33,7 @@ public class QuantisThreadPool {
     public QuantisThreadPool(BigBuffer bigBuffer, Runnable onAllStopped) {
         this.bigBuffer = bigBuffer;
         this.onAllStopped = onAllStopped;
-        this.threads = new Unchecked<>(new Sticky<>(this::createSuspendedThreads)); // true OOP style!
+        this.threads = new Sticky<>(this::createSuspendedThreads); // true OOP style!
     }
 
     private List<Thread> createSuspendedThreads() throws QuantisException {
@@ -60,8 +62,7 @@ public class QuantisThreadPool {
                 String msg = "Quantis device PCI#"+i+" is not working. Do not using it.";
                 logger.error(msg);
             }
-
-    }
+        }
 
         for (int i = 0; i < countUsb; i++) {
             try {
@@ -93,11 +94,15 @@ public class QuantisThreadPool {
     }
 
     public void stopAll() {
-        for (Thread t : this.threads.value()) {
-            if (t.isAlive()) {
-                logger.debug("Interrupting " + t + " on stopAll()");
-                t.interrupt();
+        try {
+            for (Thread t : this.threads.value()) {
+                if (t.isAlive()) {
+                    logger.debug("Interrupting " + t + " on stopAll()");
+                    t.interrupt();
+                }
             }
+        } catch (Exception e) {
+            // assume we are already stopped
         }
         totalStarted = 0;
     }
@@ -107,6 +112,7 @@ public class QuantisThreadPool {
     }
 
     /**
+     * main for testing purposes
      * @param args the command line arguments
      * @throws Exception any exception that forces the main app to terminate
      */

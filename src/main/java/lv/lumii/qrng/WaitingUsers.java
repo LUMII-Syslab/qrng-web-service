@@ -6,6 +6,7 @@ import java.util.*;
 import java.util.concurrent.PriorityBlockingQueue;
 
 public class WaitingUsers<User> {
+
     private int maxUsersToTrail = 1000;
     private long time = 0;
     // ^^^ will be incremented when registering each next user;
@@ -33,8 +34,9 @@ public class WaitingUsers<User> {
         time++;
         if (prioritizedRegistrations.size() >= maxUsersToTrail)
             throw new BufferOverflowException();
-        if (registeredUsers.containsKey(user))
+        if (registeredUsers.containsKey(user)) {
             throw new KeyAlreadyExistsException();
+        }
 
         Registration registration = new Registration(user, time);
         prioritizedRegistrations.add(registration);

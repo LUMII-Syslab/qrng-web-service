@@ -37,4 +37,5 @@ rm ${DIR}/server.csr
 cat ${DIR}/server.crt > ${DIR}/server.pem
 cat ${DIR}/server.key >> ${DIR}/server.pem
 
-echo Deploy ${DIR}/server.pem to HAProxy!
+echo "Copying ${DIR}/server.pem to ${DIR}/../cfg/ (for HAProxy)...
+cp ${DIR}/server.pem ${DIR}/../cfg/

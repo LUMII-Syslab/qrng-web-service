@@ -43,9 +43,8 @@ public class Main {
             implementation 'org.slf4j:slf4j-simple:2.+'
          */
 
-        System.setProperty("org.slf4j.simpleLogger.logFile", "C:\\Users\\SysLab\\source\\qrng-web-service\\qqq.log");
+        System.setProperty("org.slf4j.simpleLogger.logFile", myDir.resolve("qrng-web-service.log").toString());
         logger = LoggerFactory.getLogger(Main.class);
-        logger.error("myDir="+myDir);
     }
 
     /***
@@ -120,7 +119,6 @@ public class Main {
                         System.exit(1);
                     }
             );
-
 
             pool.startAll();
             logger.info("Replenishing thread(s) started");

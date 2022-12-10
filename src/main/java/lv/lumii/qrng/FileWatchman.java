@@ -41,43 +41,30 @@ public class FileWatchman extends Thread {
     public void run() {
         WatchService watcher;
         WatchKey key;
-        logger.error("FileWatchman started");
         try {
             watcher = FileSystems.getDefault().newWatchService();
-            logger.error("FileWatchman started1");
             key = parentPath.register(watcher, StandardWatchEventKinds.ENTRY_CREATE);
-            logger.error("FileWatchman started2");
         } catch (IOException e) {
             logger.error("FileWatchman could not be registered", e);
             return;
         }
 
         for (;;) {
-            /*WatchKey key;
-            try {
-                key = watcher.take();
-                logger.error("FileWatchman key ok");
-            } catch (InterruptedException x) {
-                return;
-            }*/
-
             for (WatchEvent<?> event : key.pollEvents()) {
                 WatchEvent.Kind<?> kind = event.kind();
                 if (kind == StandardWatchEventKinds.OVERFLOW) {
                     continue;
                 }
                 if (kind == StandardWatchEventKinds.ENTRY_CREATE) {
-                    logger.error("FileWatchman create ok");
                     String fileName = ((WatchEvent<Path>) event).context().toFile().getName();
-                    logger.error("FileWatchman filename="+fileName);
                     if (fileNameToWatch.equals(fileName)) {
-                        logger.info("FILE "+fileNameToWatch+" created!!!!");
+                        logger.info("Terminating since the notification file "+fileNameToWatch+" was created.");
                         onFileCreated.callback(fileName);
                         if (runOnce)
                             return;
                     }
                     if (!fileNamePrefixToWatch.isEmpty() && fileName.startsWith(fileNamePrefixToWatch)) {
-                        logger.info("FILE PREFIX "+fileNameToWatch+" created!!!!");
+                        logger.info("Terminating since the notification file "+fileNameToWatch+" was created.");
                         onFileCreated.callback(fileName);
                         if (runOnce)
                             return;

@@ -51,6 +51,13 @@ static def getOsArch() {
     // in x86_64 Windows, this returns amd64, which is ok, since in Windows, %PROCESSOR_ARCHITECTURE%=AMD64 and the case does not matter
 }
 
+static def getBashPath() {
+    final String osName = System.getProperty("os.name").toLowerCase()
+
+    if (osName.contains("windows")) {
+    }
+}
+
 def JAVA_LIBRARY_PATH_PLACEHOLDER=projectDir.toPath().resolve("dll").resolve(getOsName()+'-'+getOsArch()).toString().replaceAll("\\\\", "/")
 // ^^^ this placeholder is used as applicationDefaultJvmArgs when invoking: gradle run
 
@@ -64,17 +71,31 @@ startScripts {
     applicationName = 'qrng-web-service'
     doLast {
         unixScript.text = unixScript.text.replace(JAVA_LIBRARY_PATH_PLACEHOLDER, '\$APP_HOME/`uname -s`-`uname -m`')
-        windowsScript.text = windowsScript.text.replace(JAVA_LIBRARY_PATH_PLACEHOLDER, '%APP_HOME%\\dll\\%OS%-%PROCESSOR_ARCHITECTURE%')
+        windowsScript.text = windowsScript.text.replace(JAVA_LIBRARY_PATH_PLACEHOLDER, '%APP_HOME%\\dll\\%OS%-%PROCESSOR_ARCHITECTURE%;%APP_HOME%\\dll\\%OS%-x86;%APP_HOME%\\dll\\%OS%-AMD64;%APP_HOME%\\dll\\%OS%-ARM64')
+        // ^^^ we add all architectures, since the .bat script can be launched, e.g., in a 32-bit cmd.exe but Java can be 64-bit
     }
 }
 
 installDist {
     doLast {
+        println "Copying HAProxy configuration into the distribution"
+        copy {
+          from(projectDir)
+          into(destinationDir)          
+          include("cfg/**")
+        }
         println "Copying ca-scripts into the distribution"
         copy {
           from(projectDir)
           into(destinationDir)          
           include("ca-scripts/**")
+        }
+        println "Copying bin-scripts into the distribution"
+        copy {
+          from(projectDir)
+          into(destinationDir)          
+          include("bin-scripts/*.bat")
+          include("bin-scripts/*.sh")
         }
         println "Copying native DLLs/libraries into the distribution"
         copy {
@@ -82,6 +103,8 @@ installDist {
           into(destinationDir)          
           include("dll/**")
         }
+        println "Generating the self-signed CA key (if it doesn't exist)"
+        println "Generating the server (signed by our CA) key (if it doesn't exist)"
     }
 }
 /*installDist {

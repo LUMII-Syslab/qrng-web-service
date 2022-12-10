@@ -10,5 +10,5 @@ curl.exe -o %DIRNAME%\wget.exe https://eternallybored.org/misc/wget/1.21.3/64/wg
 %DIRNAME%\wget.exe -O %DIRNAME%\servicemanager.exe https://github.com/cubiclesoft/service-manager/raw/master/servicemanager.exe
 :SERVICEMANAGER_OK
      
-::echo. >%DIRNAME%..\NotifyFile.stop
+powershell -Command "Start-Process cmd -Verb RunAs -ArgumentList '/k cd /d %CD% && %DIRNAME%\servicemanager.exe uninstall qrng-haproxy'"
 powershell -Command "Start-Process cmd -Verb RunAs -ArgumentList '/k cd /d %CD% && %DIRNAME%\servicemanager.exe uninstall qrng-web-service'"

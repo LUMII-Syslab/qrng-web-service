@@ -59,7 +59,7 @@ public class Quantis {
         try {
             System.loadLibrary("Quantis");
         }
-        catch (Exception e) {
+        catch (Throwable e) { // Unsatisfied link errors are not Exceptions but Throwables!
             System.err.println("Quantis.dll ERROR");
             e.printStackTrace();
         }

@@ -10,6 +10,7 @@
 
 export PATH=/usr/bin:$PATH
 export DIR=$(dirname $0)
+export CFG_DIR=$DIR/../cfg
 export OQS_OPENSSL=/opt/oqs/bin/openssl
 # alternate openssl path:
 #export OQS_OPENSSL="$HOME/quantum/openssl/apps/openssl"
@@ -53,4 +54,6 @@ echo yes | keytool -importcert -alias ${CA_ALIAS} -keystore ${KEYSTORE} -storepa
 rm $TMP
 echo "Validating..."
 keytool -keystore ${KEYSTORE} -storepass ${STOREPASS} -list | grep ${CA_ALIAS}
+echo "Copying ${CA_CRT} to ${CFG_DIR}...
+cp ${CA_CRT} ${CFG_DIR}/
 echo "Deploy the ${KEYSTORE} file to all users."

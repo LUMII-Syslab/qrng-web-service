@@ -157,8 +157,15 @@ public class QrngWebSocketClient extends WebSocketAdapter {
             desiredSize.update(n);
             logger.debug("Socket "+this+" was requested to send "+n+" random bytes");
 
-            if (!desiredSize.fulfilled())
-                waitingUsers.enqueue(this);
+            if (!desiredSize.fulfilled()) {
+                try {
+                    waitingUsers.enqueue(this);
+                }
+                catch (KeyAlreadyExistsException e) {
+                    logger.debug("User "+this+" is already waiting. We have just updated the desired size" +
+                            " to "+n+" bytes.");
+                }
+            }
         }
     }
 
