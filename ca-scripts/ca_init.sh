@@ -54,6 +54,6 @@ echo yes | keytool -importcert -alias ${CA_ALIAS} -keystore ${KEYSTORE} -storepa
 rm $TMP
 echo "Validating..."
 keytool -keystore ${KEYSTORE} -storepass ${STOREPASS} -list | grep ${CA_ALIAS}
-echo "Copying ${CA_CRT} to ${CFG_DIR}...
+echo "Copying ${CA_CRT} to ${CFG_DIR}..."
 cp ${CA_CRT} ${CFG_DIR}/
 echo "Deploy the ${KEYSTORE} file to all users."
