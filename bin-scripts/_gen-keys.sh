@@ -18,5 +18,5 @@ echo "===> Checking/generating the client key pair..."
 [ -d $CA_DIR/client ] || $CA_DIR/new_client_key.sh ca client $CA_DIR/client.cnf
 
 echo "===> Checking/generating the server key pair..."
-[ -d $CA_DIR/server ] || $CA_DIR/new_server_key.sh ca server $CA_DIR/server.cnf
+[ -d $CA_DIR/server ] || $CA_DIR/new_server_key.sh ca server $MY_DIR/server.cnf
 cp $CA_DIR/server/server.pem $CFG_DIR/
