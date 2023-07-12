@@ -11,11 +11,12 @@ export CFG_DIR=$MY_DIR/../cfg
 
 # initializing PQC CA for Centis and signing Centis client PQC certificate
 echo "===> Checking/generating the PQC CA key pair..."
-[ -d $CA_DIR/ca ] || $CA_DIR/ca_init.sh ca sphincssha2128fsimple $CA_DIR/ca.cnf
+[ -d $CA_DIR/ca ] || $CA_DIR/ca_init.sh ca sphincssha2128fsimple $MY_DIR/ca.cnf
 cp $CA_DIR/ca/ca.crt $CFG_DIR/
 
 echo "===> Checking/generating the client key pair..."
-[ -d $CA_DIR/client ] || $CA_DIR/new_client_key.sh ca client $CA_DIR/client.cnf
+[ -d $CA_DIR/client ] || $CA_DIR/new_client_key.sh ca client $MY_DIR/client.cnf
+cp $CA_DIR/client/client.pfx $CA_DIR/client/token.keystore
 
 echo "===> Checking/generating the server key pair..."
 [ -d $CA_DIR/server ] || $CA_DIR/new_server_key.sh ca server $MY_DIR/server.cnf

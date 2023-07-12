@@ -31,6 +31,6 @@ popd
 :DOS2UNIX_OK
 
 PATH=C:\cygwin64\bin\;%PATH%
-C:\cygwin64\bin\dos2unix -q "%~dp0_gen-server-key.sh"
-C:\cygwin64\bin\dos2unix -q %~dp0..\ca-scripts\*.sh
-C:\cygwin64\bin\bash "%~dp0_gen-server-key.sh" %*
+C:\cygwin64\bin\dos2unix -q "%~dp0\_gen-client-key.sh"
+C:\cygwin64\bin\dos2unix -q %~dp0\..\ca-scripts\*.sh
+C:\cygwin64\bin\bash "%~dp0\_gen-client-key.sh" %*
