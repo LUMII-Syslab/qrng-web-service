@@ -51,10 +51,14 @@ static def getOsArch() {
     // in x86_64 Windows, this returns amd64, which is ok, since in Windows, %PROCESSOR_ARCHITECTURE%=AMD64 and the case does not matter
 }
 
-static def getBashPath() {
+static def getShExt() {
     final String osName = System.getProperty("os.name").toLowerCase()
 
     if (osName.contains("windows")) {
+       return ".bat"
+    }
+    else {
+       return ".sh"
     }
 }
 
@@ -103,8 +107,10 @@ installDist {
           into(destinationDir)          
           include("dll/**")
         }
-        println "Generating the self-signed CA key (if it doesn't exist)"
-        println "Generating the server (signed by our CA) key (if it doesn't exist)"
+        println "Generating the self-signed CA key, the server key, and the clinet key (if they don't exist)"
+        exec {
+          commandLine destinationDir.toString() + "/bin-scripts/_gen-keys" + getShExt()
+        }
     }
 }
 /*installDist {
