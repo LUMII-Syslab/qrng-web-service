@@ -88,6 +88,7 @@ public class QuantisThreadPool {
                 totalStarted++;
             }
         } catch (Exception e) {
+            logger.error("Stopping all threads due to an exception", e);
             stopAll();
             throw new Exception("No threads running, since an exception occurred.", e);
         }

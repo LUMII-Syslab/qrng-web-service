@@ -43,8 +43,10 @@ public class Main {
             implementation 'org.slf4j:slf4j-simple:2.+'
          */
 
-        System.setProperty("org.slf4j.simpleLogger.logFile", myDir.resolve("qrng-web-service.log").toString());
+        if (System.getProperty("org.slf4j.simpleLogger.logFile","").isEmpty())
+            System.setProperty("org.slf4j.simpleLogger.logFile", myDir.resolve("qrng-web-service.log").toString());
         logger = LoggerFactory.getLogger(Main.class);
+        logger.info("java.library.path="+System.getProperty("java.library.path"));
     }
 
     /***
@@ -141,6 +143,20 @@ public class Main {
                 }
             });
 
+            new Thread( () -> {
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                }
+                logger.info("Web server after 5 seconds is "+(webServer.isRunning()?"":"NOT ")+"running");
+                Connector[] connectors = webServer.getConnectors();
+                for (Connector c: connectors) {
+                    if (c instanceof ServerConnector) {
+                        ServerConnector sc = (ServerConnector)c;
+                        logger.info("  Web server is listening at " +sc.getHost()+":"+sc.getPort());
+                    }
+                }
+            }).start();
             try {
                 webServer.join();
             } catch (InterruptedException ex) {

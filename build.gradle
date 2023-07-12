@@ -118,8 +118,8 @@ run {
        jvmArgs '-Djava.library.path='+projectDir.toPath().resolve("dll").resolve(getOsName()+'-'+getOsArch())
        applicationDefaultJvmArgs = jvmArgs
        systemProperty('java.library.path',jvmArgs)
+       // Uncomment for a lot of debug logging:
+       // systemProperty('org.slf4j.simpleLogger.defaultLogLevel', 'debug');
+       // We can also set 'org.slf4j.simpleLogger.logFile' this way.
     }   
-    jvmArgs '-Djava.library.path='+projectDir.toPath().resolve("dll").resolve(getOsName()+'-'+getOsArch())
-    systemProperty('java.library.path',jvmArgs)
-    applicationDefaultJvmArgs = jvmArgs
 }
