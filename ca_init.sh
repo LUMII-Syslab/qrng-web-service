@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -Eeuxo pipefail
+set -Eeo pipefail
 #
 # Generates a new CA key pair to be used for signing server and client certificates.
 # If the CA key pair already exists, does nothing.
